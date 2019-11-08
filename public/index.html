@@ -1,0 +1,70 @@
+<!doctype html>
+<html>
+<head>
+	<title>ListPlay Prototype</title>
+
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/2.0.0/handlebars.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/handlebars.js/2.0.0-alpha.1/handlebars.min.js"></script>
+  <script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
+  <script src="js/listplay.js"></script>
+
+  <script id="playlist-table-template" type="text/x-handlebars-template">
+    <table class="table">
+			<thead>
+				<tr>
+					<th scope="col">Song Title</th>
+					<th scope="col">Artist</th>
+					<th scope="col">Album</th>
+					<th scope="col">Duration</th>
+				</tr>
+			</thead>
+			<tbody>
+    		{{#each tracks}}
+    		<tr>
+    			<td>{{songTitle}}</td>
+    			<td>{{artist}}</td>
+    			<td>{{album}}</td>
+    			<td>{{duration}}</td>
+  			</tr>
+    		{{/each}}
+  		</tbody>
+		</table>
+
+		<button class='btn btn-primary' onclick='submitPlaylist()' style='float: right;'>Submit Playlist</button>
+  </script>
+
+  <script id="top-artist-template" type="text/x-handlebars-template">
+  	<h2>5 most played artists</h2>
+  	<ol class="list-group">
+  		{{#each topArtists}}
+  		<li class="list-group-item">{{artist}}</li>
+  		{{/each}}
+  	</ol>
+  </script>
+</head>
+
+<body>
+<div class="container">
+	<h1><a href="./" onclick="window.location.reload()">ListPlay Prototype</a></h1>
+	<button class="btn btn-primary" style="float:right;" onClick="getTopArtists()">Show Top Artists</button>
+
+	<div id="spotifyUrlForm" class="row no-gutters">
+		<div class="col-6">
+			<!-- add a lil help button here later -->
+			<input class="form-control" type="text" id="spotify_url" placeholder="Enter a Spotify URI">
+		</div>
+		<div class="col-2">
+			<button class="btn btn-primary" type="submit" id="parse_url">Submit</button>
+		</div>
+	</div>
+
+	<div id="playlistDisplay">
+	</div>
+
+	<div id="topArtist" style="text-align: center;">
+	</div>
+</div>
+</body>
+</html>
