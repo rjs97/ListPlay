@@ -1,0 +1,51 @@
+{{> header}}
+<script>
+	$("#playlisttable").on('click', '#delete_row', function() {
+		$(this).parents('tr').remove();
+	});
+
+	$("#playlisttable").on('click', "#add_row", function() {
+		var songTitle = $("#songTitle").val();
+		var artist = $("#artist").val();
+		var album = $("#album").val();
+		var duration = $("#duration").val();
+		var new_row = `<tr><td contenteditable='true'>${songTitle}</td><td contenteditable='true'>${artist}</td><td contenteditable='true'>${album}</td><td contenteditable='true'>${duration}</td><td><button id='delete_row' class='btn btn-danger'><span>X</span></button></td></tr>`;
+		var temp = $(this).parents('tr').detach();
+		$("#playlisttable").append(new_row);
+		$("#playlisttable").append(temp);
+		$(".form-control").val('');
+	});
+</script>
+
+<table id="playlisttable" class="table table-responsive-md">
+	<thead>
+		<tr>
+			<th scope="col">Song Title</th>
+			<th scope="col">Artist</th>
+			<th scope="col">Album</th>
+			<th scope="col">Duration</th>
+			<th scope="col"></th>
+		</tr>
+	</thead>
+	<tbody>
+	{{#each trackList}}
+	<tr>
+		<td contenteditable="true">{{songTitle}}</td>
+		<td contenteditable="true">{{artist}}</td>
+		<td contenteditable="true">{{album}}</td>
+		<td contenteditable="true">{{duration}}</td>
+		<td><button id="delete_row" class='btn btn-danger'><span>X</span></button></td>
+	</tr>
+	{{/each}}
+	<tr>
+		<td><input class="form-control" type="text" id="songTitle" placeholder="Song Title"></td>
+		<td><input class="form-control" type="text" id="artist" placeholder="Artist"></td>
+		<td><input class="form-control" type="text" id="album" placeholder="Album"></td>
+		<td><input class="form-control" type="text" id="duration" placeholder="Duration"></td>
+		<td><button id="add_row" class="btn btn-success"><span>+</span></button></td>
+	</tr>
+	</tbody>
+</table>
+<div class="row" style="float: right;">
+	<button class='btn btn-primary' onclick="submitPlaylist()">Submit Playlist</button>
+</div>

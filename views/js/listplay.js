@@ -1,9 +1,6 @@
 var tracks = [];
 var access_token;
 $(document).ready(function() {
-	$("#playlistDisplay").hide();
-	$("#topArtist").hide();
-	document.getElementById('parse_url').addEventListener('click', submitSpotify);
 	$.ajax({
 		url: '/get_token',
 	}).done(function(data) {
@@ -14,7 +11,7 @@ $(document).ready(function() {
 	});
 });
 
-var submitSpotify = function() {
+var submitSpotify = function(e) {
 	var uri = $("#spotify_url").val().split(':');
 	var id = uri[uri.length - 1];
 	var getUrl = 'https://api.spotify.com/v1/playlists/' + id;
@@ -25,22 +22,21 @@ var submitSpotify = function() {
 			'Authorization': 'Bearer ' + access_token
 		},
 		success: function(response) {
-			$("#topArtist").hide();
-			$("#playlistDisplay").empty();
-			$("#playlistDisplay").show();
-			var playlistTableSource = $("#playlist-table-template").html();
-			var playlistTableTemplate = Handlebars.compile(playlistTableSource);
-			
-			tracks = [];
 			var trackInfo = response['tracks']['items'];
 			for (i = 0; i < trackInfo.length; i++) {
 			  var track = trackInfo[i]['track'];
 			  tracks.push({songTitle: track['name'], artist: track['artists'][0]['name'], album: track['album']['name'], duration: roundMs(track['duration_ms'])});
 			}
 
-			var context = {tracks}; // format properly for handlebars
-			var playlistTableCompiled = playlistTableTemplate(context);
-			$("#playlistDisplay").html(playlistTableCompiled);
+			$.ajax({
+				type: 'POST',
+				url: '/get_playlist',
+				dataType: "html",
+				contentType: "application/json; charset=utf-8",
+				data: JSON.stringify({'tracks': tracks})
+			}).done(function(data) {
+				$('html').html(data)
+			})
 		}
 	});
 
@@ -57,27 +53,51 @@ var getTopArtists = function() {
 		type: "GET",
 		url: "/get_top_artists",
 	}).done(function(data) {
-		showTopArtists(data);
+		$('html').html(data);
 	});
 }
 
 var submitPlaylist = function() {
-	var insertStrings = [];
-	for (i = 0; i < tracks.length; i++) {
-		var insert = `INSERT INTO Tracks (Title, Artist, Album, Duration) VALUES ("${tracks[i]['songTitle']}", "${tracks[i]['artist']}", "${tracks[i]['album']}", 
-		"${tracks[i]['duration']}")`;
-		insertStrings.push(insert);
-	}
-
+	var trackList = tableToJson();
 	$.ajax({
 		type: "POST",
 		url: "/submit_playlist",
-		dataType: "json",
+		dataType: "html",
 		contentType: "application/json; charset=utf-8",
-		data: JSON.stringify({'insert': insertStrings}),
+		data: trackList,
 	}).done(function(data) {
-		showTopArtists(data);
+		$('html').html(data);
 	});
+};
+
+var tableToJson = function() {
+	var tracks = [];
+	$("#playlisttable tbody tr").each(function (i, n) {
+		var $row = $(n);
+		if ($row.find('td input').length) {
+			if ($row.find('td input:placeholder-shown').length) {
+				// input row is not filled out, skip this row
+				return false;
+			} 
+			// input row IS filled out - add it!
+			tracks.push({
+				songTitle: $row.find('td:eq(0) input').val(),
+				artist: $row.find('td:eq(1) input').val(),
+				album: $row.find('td:eq(2) input').val(),
+				duration: $row.find('td:eq(3) input').val(),
+			});
+		} else {
+			// normal row
+			tracks.push({
+				songTitle: $row.find('td:eq(0)').text(),
+				artist: $row.find('td:eq(1)').text(),
+				album: $row.find('td:eq(2)').text(),
+				duration: $row.find('td:eq(3)').text(),
+			});
+		}
+	});
+	console.log(tracks);
+	return JSON.stringify(tracks);
 };
 
 var showTopArtists = function(data) {
