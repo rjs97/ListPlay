@@ -11,6 +11,5 @@ To run:
 
 
 Features to be implemented:
-1. Allow individual DJ login (with DJ profile pages)
 1. Add options to upload individual albums or songs
 1. Implement features for other streaming services (Apple Music, Soundcloud, Youtube)
