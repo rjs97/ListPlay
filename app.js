@@ -10,6 +10,7 @@ const hbs = require('express-handlebars');
 var client_id = '128c266cc87942f5bb758c0e3c98830b'; // Your client id
 var client_secret = 'xxx'; // Your secret
 var tracks = []; // temporary track list
+var cnx = null;
 
 var app = express();
 
@@ -33,15 +34,43 @@ app.use(express.static(__dirname + '/views'))
 	}));
 
 app.get('/', function(req, res) {
-	if (req.session.loggedin) {
-		res.render('index', {user: req.session.username});
-	} else {
-		res.render('index');
-	}	
+	cnx = connectDb();
+	cnx.query("SELECT artist FROM listplay.tracks GROUP BY artist ORDER BY COUNT(artist) DESC LIMIT 5;", function(err, rows, fields) {
+		if (err) throw err;
+		console.log("top artists", rows);
+		if (req.session.loggedin) {
+			res.render('topartists', {user: req.session.username, topArtists: rows});
+		} else {
+			res.render('topartists', {topArtists: rows});
+		}
+	});
 })
+
+app.get('/test', function(req, res) {
+	cnx = connectDb();
+	var map = new Object();
+	var q = `SELECT Title, Artist, Album, Duration, Name from listplay.tracks where DJ_Name='djaya'`;
+	cnx.query(q, function(err, rows, fields) {
+		// console.log(rows);
+		for (i = 0; i < rows.length; i++) {
+			var name = rows[i].Name;
+			if (map.hasOwnProperty(name)) {
+				var songs = map[name];
+				songs.push(rows[i]);
+			} else {
+				map[name] = new Array(rows[i]);
+			}
+		}
+		res.render('profile', {user: 'DJAYA', object: map});
+	})
+});
 
 app.get('/login_page', function(req, res) {
 	res.render('login');
+})
+
+app.get('/prompt_login', function(req, res) {
+	res.render('prompt_login');
 })
 
 app.get('/get_token', function(req, res) {
@@ -64,27 +93,14 @@ app.get('/get_token', function(req, res) {
 	});
 });
 
-app.get('/connect_db', function(req, res) {
-	var connection = connectDb();
-	connection.connect();
-
-	var create = "CREATE TABLE IF NOT EXISTS `ListPlay`.`tracks` (`Title` VARCHAR(100) NOT NULL, `Artist` VARCHAR(100) NOT NULL, `Album` VARCHAR(100) NOT NULL,`Duration` VARCHAR(5) NOT NULL, `DJ_Name` VARCHAR(12) NOT NULL);";
-
-	connection.query(create, function(err, rows, fields) {
-		if (err) throw err;
-		connection.end();
-	})
-})
-
 app.post('/login', function(req, res) {
-	var connection = connectDb();
 	console.log(req.body);
 	var username = req.body.username;
 	var password = req.body.password;
 	if (username && password) {
 		var checkLogin = `SELECT * FROM listplay.accounts WHERE username="${username}" AND password="${password}"`;
 		console.log(checkLogin);
-		connection.query(checkLogin, function(err, rows, fields) {
+		cnx.query(checkLogin, function(err, rows, fields) {
 			if (rows.length > 0) {
 				req.session.loggedin = true;
 				req.session.username = username;
@@ -101,74 +117,90 @@ app.post('/login', function(req, res) {
 app.post('/register', function(req, res) {
 	// add error checking for existing DJs
 	// hash passwords
-	var connection = connectDb();
-	connection.connect();
 	console.log(req.body);
 	var username = req.body.username;
 	var password = req.body.password;
 	if (username && password) {
-		var maxId;
-		connection.query("SELECT MAX(id) FROM listplay.accounts", function(err, rows, fields) {
-			if (err) throw err;
-			maxId = rows[0]['MAX(id)'] + 1;
-			var register = `INSERT INTO listplay.accounts (id, username, password) VALUES ("${maxId}", "${username}", "${password}")`;
-			console.log(register);
-			connection.query(register, function(err, rows, fields) {
-				req.session.loggedin = true;
-				req.session.username = username;
-				res.redirect('/');
-			});
+		var register = `INSERT INTO listplay.accounts (username, password) VALUES ("${username}", "${password}")`;
+		console.log(register);
+		cnx.query(register, function(err, rows, fields) {
+			req.session.loggedin = true;
+			req.session.username = username;
+			res.redirect('/');
 		});
 	} else {
 		res.render('login', {error: "Please re-enter Username and Password"});
 	}
 })
 
-app.post('/get_playlist', function(req, res) {
-	tracks = req.body.tracks;
-	console.log("get_playlist: ", tracks);
-	res.render('playlisttable', {trackList: tracks});
-})
-
-app.post('/submit_playlist', function(req, res) {
-	var connection = connectDb();
-	connection.connect();
-
-	var djName = "anonymous dj";
-	if (req.session.loggedin) {
-		djName = req.session.username;
-	}
-
-	var trackList = req.body;
-	console.log("submit_playlist: ", trackList);
-	for (i = 0; i < trackList.length; i++) {
-		var insert = `INSERT INTO listplay.tracks (Title, Artist, Album, Duration, DJ_Name) VALUES ("${trackList[i]['songTitle']}", "${trackList[i]['artist']}", "${trackList[i]['album']}", 
-		"${trackList[i]['duration']}", "${djName}")`;
-		connection.query(insert, function(err, rows, fields) {
-			if (err) throw err;
-		});
-	}
-	res.redirect('/get_top_artists');
-})
-
-app.get('/get_top_artists', function(req, res) {
-	var connection = connectDb();
-	connection.connect();
-	connection.query("SELECT artist FROM listplay.tracks GROUP BY artist ORDER BY COUNT(artist) DESC LIMIT 5;", function(err, rows, fields) {
-		if (err) throw err;
-		console.log("top artists", rows);
-		res.render('topartists', {topArtists: rows})
-		connection.end();
+app.get('/profile', function(req, res) {
+	var username = req.session.username;
+	cnx = connectDb();
+	var map = new Object();
+	var q = `SELECT Title, Artist, Album, Duration, Name from listplay.tracks where DJ_Name='${username}'`;
+	cnx.query(q, function(err, rows, fields) {
+		// console.log(rows);
+		for (i = 0; i < rows.length; i++) {
+			var name = rows[i].Name;
+			if (map.hasOwnProperty(name)) {
+				var songs = map[name];
+				songs.push(rows[i]);
+			} else {
+				map[name] = new Array(rows[i]);
+			}
+		}
+		res.render('profile', {user: username, object: map});
 	})
 })
 
+app.post('/get_playlist', function(req, res) {
+	tracks = req.body.tracks;
+	console.log("get_playlist: ", tracks);
+	if (req.session.loggedin) {
+		res.render('playlisttable', {user: req.session.username, trackList: tracks});
+	} else {
+		res.render('playlisttable', {trackList: tracks});
+	}
+})
+
+app.post('/submit_playlist', function(req, res) {
+	var cnx = connectDb();
+	if (req.session.loggedin) {
+		var djName = req.session.username;
+		var trackList = JSON.parse(req.body.trackList);
+		var name = req.body.date;
+		console.log("submit_playlist: ", trackList);
+		for (i = 0; i < trackList.length; i++) {
+			var insert = `INSERT INTO listplay.tracks (Title, Artist, Album, Duration, DJ_Name, Name) VALUES ("${trackList[i]['songTitle']}", "${trackList[i]['artist']}", "${trackList[i]['album']}", 
+			"${trackList[i]['duration']}", "${djName}", "${name}")`;
+			cnx.query(insert, function(err, rows, fields) {
+				if (err) throw err;
+			});
+		}
+		res.redirect('/profile');
+	} else {
+		// make this cleaner later
+		res.render('login', {error: "Please log in to submit a playlist"});
+	}
+})
+
 var connectDb = function() {
-	return mysql.createConnection({
+	var cnx = mysql.createConnection({
 		host: 'localhost',
 		user: 'dbuser',
 		password: 'dbuserdbuser',
 		database: 'ListPlay'
 	});
+	var create_tracks = "CREATE TABLE IF NOT EXISTS `ListPlay`.`tracks` (`Title` VARCHAR(100) NOT NULL, `Artist` VARCHAR(100) NOT NULL, `Album` VARCHAR(100) NOT NULL,`Duration` VARCHAR(5) NOT NULL, `DJ_Name` VARCHAR(12) NOT NULL, `Name` VARCHAR(34) NOT NULL);";
+	var create_accounts = "CREATE TABLE IF NOT EXISTS `ListPlay`.`accounts` (`username` varchar(50) NOT NULL,`password` varchar(255) NOT NULL, PRIMARY KEY (`username`));";
+
+	cnx.query(create_tracks, function(err, rows, fields) {
+		if (err) throw err;
+	})
+	cnx.query(create_accounts, function(err, rows, fields) {
+		if (err) throw err;
+	})
+	return cnx;
 }
 
 console.log('listening on port 8888');

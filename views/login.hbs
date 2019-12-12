@@ -1,7 +1,8 @@
-{{#if error}}
-	<h4>{{error}}</h4>
-{{/if}}
 <div class="container">
+	<!-- maybe make this into an alert later -->
+	{{#if error}}
+		<h4 style="text-align: center; color: red;">{{error}}</h4>
+	{{/if}}
 	<h1 style="float:center; margin-top: 50px;"><a href="./">ListPlay Prototype</a></h1>
 	<ul class="nav nav-tabs" id="loginTabs" role="tablist">
 		<li class="nav-item">

@@ -6,9 +6,6 @@ $(document).ready(function() {
 	}).done(function(data) {
 		access_token = data.access_token;
 	});
-	$.ajax({
-		url: '/connect_db',
-	});
 });
 
 var submitSpotify = function(e) {
@@ -48,26 +45,24 @@ var submitSpotify = function(e) {
 	}
 };
 
-var getTopArtists = function() {
-	$.ajax({
-		type: "GET",
-		url: "/get_top_artists",
-	}).done(function(data) {
-		$('html').html(data);
-	});
-}
-
 var submitPlaylist = function() {
-	var trackList = tableToJson();
-	$.ajax({
-		type: "POST",
-		url: "/submit_playlist",
-		dataType: "html",
-		contentType: "application/json; charset=utf-8",
-		data: trackList,
-	}).done(function(data) {
-		$('html').html(data);
-	});
+	var date = $("#playlist_date").val();
+	if ($.trim(date) == "") {
+		alert("Please enter a title for your playlist! (maybe the date?)")
+		$("#playlist_date").focus()
+	} else {
+		var trackList = tableToJson();
+		$.ajax({
+			type: "POST",
+			url: "/submit_playlist",
+			dataType: "html",
+			contentType: "application/json; charset=utf-8",
+			data: JSON.stringify({"trackList": trackList, "date": date}),
+		}).done(function(data) {
+			$('html').html(data);
+			$("#playlist_date").val("")
+		});
+	}
 };
 
 var tableToJson = function() {

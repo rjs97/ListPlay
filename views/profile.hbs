@@ -1,0 +1,41 @@
+<h1>{{user}}'s profile</h1>
+
+<div class="accordion" id="playlists">
+	{{#each object}}
+	<div class="card">
+		<div class="card-header" id="Card{{@index}}">
+			<h2 class="mb-0">
+				<button class="btn btn-link" type="button" data-toggle="collapse" data-target="#Data{{@index}}">
+					{{@key}}
+				</button>
+			</h2>
+		</div>
+		<div id="Data{{@index}}" class="collapse" data-parent="#playlists">
+			<div class="card-body">
+				<table id="playlisttable" class="table">
+					<thead>
+						<tr>
+							<th scope="col">Song Title</th>
+							<th scope="col">Artist</th>
+							<th scope="col">Album</th>
+							<th scope="col">Duration</th>
+							<th scope="col"></th>
+						</tr>
+					</thead>
+					<tbody>
+					{{#each this}}
+					<tr>
+						<td>{{Title}}</td>
+						<td>{{Artist}}</td>
+						<td>{{Album}}</td>
+						<td>{{Duration}}</td>
+					</tr>
+					{{/each}}
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+	{{/each}}
+</div>
+

@@ -1,0 +1,8 @@
+<div class="user" style="float: right;">
+{{#if user}}
+	<h4>Welcome back, <a href='/profile'>{{user}}<a></h4>
+{{else}}
+	<a href="/login_page"><button class="btn btn-secondary" style="float:right;">Login/Register</button></a>
+{{/if}}
+</div>
+{{> header}}

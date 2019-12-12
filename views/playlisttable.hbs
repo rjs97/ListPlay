@@ -1,4 +1,4 @@
-{{> header}}
+{{> index user=user}}
 <script>
 	$("#playlisttable").on('click', '#delete_row', function() {
 		$(this).parents('tr').remove();
@@ -15,8 +15,14 @@
 		$("#playlisttable").append(temp);
 		$(".form-control").val('');
 	});
-</script>
 
+	// $("#submit_date").on('click', function() {
+	// 	submitPlaylist();
+	// })
+</script> 
+<div>
+<h4 class="mt-2" style="color: slateblue; text-align: color;">Review songs and submit at the bottom of the page</h4>
+<input class="form-control" type="text" id="playlist_date" placeholder="Enter the playlist title">
 <table id="playlisttable" class="table table-responsive-md">
 	<thead>
 		<tr>
@@ -46,6 +52,30 @@
 	</tr>
 	</tbody>
 </table>
-<div class="row" style="float: right;">
+<div>
+
+ <div class="row" style="float: right;">
 	<button class='btn btn-primary' onclick="submitPlaylist()">Submit Playlist</button>
 </div>
+
+<!-- <div class="modal fade" id="add_date" role="dialog">
+	<div class="modal-dialog" role="document">
+		<div class="modal-content">
+			<div class="modal-header text-center">
+				<h4 class="modal-title font-weight-bold">Saving your playlist!</h4>
+				<button type="button" class="close" data-dismiss="modal">
+					<span>&times;</span>
+				</button>
+			</div>
+			<div class="modal-body mx-3 text-center">
+				<div class="md-form mb-3">
+					<label for="user_list">Enter the Date: </label>
+					<input type="text" id="playlist_date" maxlength="100" placeholder="Playlist date">
+				</div>
+			</div>
+			<div class="modal-footer d-flex justify-content-center">
+				<button class="btn btn-outline-secondary" id="submit_date">Submit</button>
+			</div> 
+		</div>
+	</div>
+</div> -->
